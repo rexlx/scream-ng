@@ -1,0 +1,27 @@
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #060a0d;
+}
+
+.dark-box{
+    background-color: #000;
+    color: rgb(65, 108, 145);
+}
+
+.msg{
+    background-color: #0a0c0b;
+    /* font-family: 'Courier New', Courier, monospace; */
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.ip{
+    font-family: sans-serif;
+    color: #383643;
+}
+.mydisplay {
+    height: 300px;
+    overflow-y: scroll;
+  }
