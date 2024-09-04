@@ -15,7 +15,8 @@ const joinRoom = document.getElementById('joinRoom');
 const userEmail = document.getElementById('username');
 const userPassword = document.getElementById('password');
 const viewHistory = document.getElementById('viewHistory');
-const historyItem = document.getElementById('historyItem');
+const userRooms = document.getElementById('userRooms');
+const addRoom = document.getElementById('addRoom');
 
 login.addEventListener('click', async (e) => {
     e.preventDefault();
@@ -25,7 +26,7 @@ login.addEventListener('click', async (e) => {
 
 checkUser();
 
-app.establishWSConnection(app.room.id ? app.room.id : 'welcome');
+app.establishWSConnection(app.room.id ? app.room.id : 'welcome', app.tk.value);
 
 async function checkErrors() {
     const div = document.createElement('div');
@@ -40,6 +41,18 @@ async function checkErrors() {
 
 setInterval(() => {
     checkErrors();
+    try {
+        if (app.tk.expires === undefined) {
+            app.getTempKey();
+        }
+        let expire = new Date(app.tk.expires);
+        let now = new Date();
+        if (expire < now) {
+            app.getTempKey();
+        }
+    } catch (error) {
+        app.errors.push("client error...", error.message);
+    }
 }, 5000);
 
 addMessage.addEventListener('click', (e) => {
@@ -74,7 +87,7 @@ joinRoom.addEventListener('click', async (e) => {
             addMessageToBox(m);
         }
     }
-    app.establishWSConnection(app.room.id ? app.room.id : 'welcome');
+    app.establishWSConnection(app.room.id ? app.room.id : 'welcome', app.tk.value);
     app.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         // console.log("WSM", data);
@@ -108,7 +121,7 @@ viewHistory.addEventListener('click', async (e) => {
                     addMessageToBox(m);
                 }
             }
-            app.establishWSConnection(app.room.id ? app.room.id : 'welcome');
+            app.establishWSConnection(app.room.id ? app.room.id : 'welcome', app.tk.value);
             app.socket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 // console.log("WSM", data);
@@ -118,6 +131,43 @@ viewHistory.addEventListener('click', async (e) => {
             // historyItem.innerHTML = '';
         });
         viewHistory.appendChild(div);
+        }
+    }
+});
+
+addRoom.addEventListener('click', async (e) => {
+    e.preventDefault();
+    await app.addRoom(userRoom.value);
+    userRoom.value = '';
+});
+
+userRooms.addEventListener('click', async (e) => {
+    e.preventDefault();
+    if (app.user.rooms) {
+        for (let h of app.user.rooms) {
+            const div = document.createElement('div');
+            div.classList.add('has-text-link-light');
+            div.innerHTML = h;
+            div.addEventListener('click', async (e) => {
+            e.preventDefault();
+            box.innerHTML = 'no messages yet';
+            await app.setRoom(h);
+            roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? app.room.name : 'upside down'}</h4>`
+            if (app.room.messages && app.room.messages.length > 0) {
+                for (let m of app.messages) {
+                    addMessageToBox(m);
+                }
+            }
+            app.establishWSConnection(app.room.id ? app.room.id : 'welcome', app.tk.value);
+            app.socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                // console.log("WSM", data);
+                addMessageToBox(data);
+            }
+            userRooms.innerHTML = `rooms`;
+            // historyItem.innerHTML = '';
+        });
+        userRooms.appendChild(div);
         }
     }
 });

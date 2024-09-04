@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -79,9 +80,13 @@ dasWriter:
 }
 
 func (wsh *WSHandler) ServeWS(rooms map[string]*Room, w http.ResponseWriter, r *http.Request) {
-	fmt.Println("ServeWS rooms map", rooms)
-	parts := r.URL.Path
-	roomID := parts[len("/ws/"):]
+	// fmt.Println("ServeWS rooms map", rooms)
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) < 3 {
+		http.Error(w, fmt.Sprintf("hmmm %v", len(parts)), http.StatusNotFound)
+		return
+	}
+	roomID := parts[2]
 	fmt.Println("ServeWS: serving ws", roomID)
 	if roomID == "" {
 		http.Error(w, "room id not found", http.StatusBadRequest)

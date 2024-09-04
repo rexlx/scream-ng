@@ -101,14 +101,30 @@ type RoomRequest struct {
 	Regular   bool   `json:"regular"`
 }
 
+func (s *Server) TempKeyHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("temp key handler")
+	var k Key
+	k.Expires = time.Now().Add(time.Minute * 5)
+	k.Value = uuid.New().String()
+	k.Issued = time.Now()
+	s.addKey(k)
+	out, err := json.Marshal(k)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
+}
+
 func (s *Server) RoomHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("room handler")
 	var rr RoomRequest
 	err := json.NewDecoder(r.Body).Decode(&rr)
 	if err != nil {
 		http.Error(w, "could not parse message", http.StatusBadRequest)
 		return
 	}
+	fmt.Println("room handler", rr)
 	if rr.Name == "" {
 		http.Error(w, "missing name", http.StatusBadRequest)
 		return
@@ -118,24 +134,27 @@ func (s *Server) RoomHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "user not found", http.StatusNotFound)
 		return
 	}
-	room := NewRoom("default", 100)
-	room.ID = "default"
+	room := NewRoom("welcome", 100)
+
+	room.ID = "welcome"
+	s.Memory.Lock()
 	for _, v := range s.Rooms {
 		if v.Name == rr.Name {
 			room = v
 			break
 		}
 	}
-	if room.ID == "default" {
+	if room.ID == "welcome" {
 		s.Logger.Printf("creating new room %v", rr.Name)
 		room = NewRoom(rr.Name, 100)
 		id := uuid.New().String()
 		room.ID = id
-		s.Memory.Lock()
+		// s.Memory.Lock()
 		s.Rooms[id] = room
-		s.Memory.Unlock()
+		// s.Memory.Unlock()
 	}
 	u.updateHistory(room.Name)
+	s.Memory.Unlock()
 	err = s.AddUser(u)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -192,13 +211,13 @@ func (s *Server) AddUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("login handler")
 	var lr UserRequest
 	err := json.NewDecoder(r.Body).Decode(&lr)
 	if err != nil {
 		http.Error(w, "could not parse message", http.StatusBadRequest)
 		return
 	}
+	fmt.Println("login handler", lr)
 	if lr.Email == "" || lr.Password == "" {
 		http.Error(w, "missing email or password", http.StatusBadRequest)
 		return
@@ -241,3 +260,37 @@ func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // func (s *Server) ServeDir()
+
+func (s *Server) AddRoomHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("add room handler")
+	var rr RoomRequest
+	err := json.NewDecoder(r.Body).Decode(&rr)
+	if err != nil {
+		http.Error(w, "could not parse message", http.StatusBadRequest)
+		return
+	}
+	if rr.Name == "" {
+		http.Error(w, "missing name", http.StatusBadRequest)
+		return
+	}
+	u, err := s.GetUserByEmail(rr.UserEmail)
+	if err != nil {
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
+	u.updateRooms(rr.Name)
+	err = s.AddUser(u)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	res := make(map[string]string)
+	res["ok"] = "true"
+	out, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
+}

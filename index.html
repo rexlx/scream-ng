@@ -38,7 +38,7 @@
     </div>
     <div class="container">
         <div class="header">
-            <h4 class="title is-4 has-text-black">scream application</h4>
+            <h4 class="title is-4 has-text-dark">scream application</h4>
             <div class="block" id="errors"></div>
         </div>
     </div>
@@ -50,8 +50,21 @@
                     <ul class="menu-list">
                         <li><a id="home" class="is-active">home</a></li>
                         <li id="historyItem"><a id="viewHistory">history</a></li>
-                        <li><a id="settings">settings</a></li>
+                        <li><a id="userRooms">rooms</a></li>
                     </ul>
+                    <div class="field">
+                        <div class="control">
+                            <input class="input is-link" type="text" placeholder="new room name" id="userRoom" />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <div class="buttons">
+                                <button class="button is-link is-outlined" id="joinRoom">join</button>
+                                <button class="button is-link is-outlined" id="addRoom">add</button>
+                            </div>
+                        </div>
+                    </div>
                 </aside>
             </div>
             <div class="column">
@@ -75,16 +88,7 @@
     <div class="footer" id="theFooter">
         <div class="columns">
             <div class="column is-one-quarter">
-                <div class="field">
-                    <div class="control">
-                        <input class="input is-link" type="text" placeholder="new room name" id="userRoom" />
-                    </div>
-                </div>
-                <div class="field">
-                    <div class="control">
-                        <button class="button is-info is-outlined" id="joinRoom">join</button>
-                    </div>
-                </div>
+                <p class="has-text-black">place holder</p>
             </div>
             <div class="column">
                 <div class="block">

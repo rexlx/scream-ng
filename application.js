@@ -3,6 +3,7 @@ export class Applcation {
     this.socket = {};
     this.connected = false;
     this.api = api;
+    this.tk = {};
     this.key = apiKey;
     this.messages = [];
     this.errors = [];
@@ -41,6 +42,28 @@ export class Applcation {
     }
 
   }
+  async getTempKey() {
+    try {
+      const res = await fetch(`${this.api}/hotsauce`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.key}`
+        }
+      });
+      const status = res.status;
+      const data = await res.json();
+      if (status === 200) {
+        this.tk = data;
+        // console.log("temp key", this.tk);
+      } else {
+        this.errors.push('key not set...');
+      }
+    }
+      catch (error) {
+        this.errors.push("error getting temp key...", error.message);
+      }
+  }
   async testConnection() {
     try {
       const resp = await fetch(`${this.api}/test`, {
@@ -62,15 +85,41 @@ export class Applcation {
     }
   }
 
-  establishWSConnection(roomID) {
-    this.socket = new WebSocket(`${this.api}/ws/${roomID}`);
+  async establishWSConnection(roomID, key) {
+    this.socket = new WebSocket(`${this.api}/ws/${roomID}/${key}`);
   }
 
   closeWSConnection() {
     this.socket.close();
     this.connected = false;
   }
-
+  async addRoom(room) {
+    try {
+      const out = {
+        email: this.user.email,
+        name: room,
+        regular: true
+      }
+      const res = await fetch(`${this.api}/addroom`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.key}`
+        },
+        body: JSON.stringify(out)
+      });
+      const status = res.status;
+      const data = await res.json();
+      if (status === 200) {
+        this.user.rooms.push(room)
+        console.log("addRoom", data);
+      } else {
+        this.errors.push('room not set (server error)');
+      }
+    } catch (error) {
+      this.errors.push("error adding room...", error.message);
+    }
+  }
   async setRoom(room) {
     try {
       const out = {
@@ -89,7 +138,6 @@ export class Applcation {
       });
       const status = res.status;
       const data = await res.json();
-      console.log("status", status)
       if (status === 200) {
         // box.innerHTML = '';
         this.room = data;
@@ -110,5 +158,6 @@ export class Applcation {
   }
   init() {
     this.testConnection();
+    this.getTempKey();
   }
 }

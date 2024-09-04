@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -17,6 +18,7 @@ var (
 
 type Server struct {
 	*WSHandler
+	ValidKeys map[string]*Key
 	Stats     *Stats
 	Rooms     map[string]*Room
 	Memory    *sync.RWMutex
@@ -33,8 +35,16 @@ type Stats struct {
 	GraphCache  string               `json:"graph_cache"`
 }
 
+type Key struct {
+	Value       string    `json:"value"`
+	Expires     time.Time `json:"expires"`
+	Issued      time.Time `json:"issued"`
+	RequestedBy string    `json:"requested_by"`
+}
+
 func NewServer(fileHandle string, dbName string) *Server {
 	rooms := make(map[string]*Room)
+	keys := make(map[string]*Key)
 	stats := &Stats{
 		App:         make(map[string]float64),
 		Coordinates: make(map[string][]float64),
@@ -56,6 +66,7 @@ func NewServer(fileHandle string, dbName string) *Server {
 		log.Fatal(err)
 	}
 	s := &Server{
+		ValidKeys: keys,
 		DB:        db,
 		Rooms:     rooms,
 		WSHandler: wsh,
@@ -69,14 +80,25 @@ func NewServer(fileHandle string, dbName string) *Server {
 	devRoom.ID = "welcome"
 	s.Rooms["welcome"] = devRoom
 	s.Gateway.Handle("/login", http.HandlerFunc(s.LoginHandler))
+	s.Gateway.Handle("/addroom", s.ValidateToken(http.HandlerFunc(s.AddRoomHandler)))
 	s.Gateway.Handle("/static/", http.StripPrefix("/static/", s.ServeStaticDirectory()))
 	s.Gateway.Handle("/test", s.ValidateToken(http.HandlerFunc(s.TestHandler)))
 	s.Gateway.Handle("/message", s.ValidateToken(http.HandlerFunc(s.MessageHandler)))
 	s.Gateway.Handle("/adduser", s.ValidateToken(http.HandlerFunc(s.AddUserHandler)))
-	s.Gateway.Handle("/messagehist", s.ValidateToken(http.HandlerFunc(s.MessageHistoryHandler)))
+	s.Gateway.Handle("/hotsauce", s.ValidateToken(http.HandlerFunc(s.TempKeyHandler)))
 	s.Gateway.Handle("/room/", http.StripPrefix("/room", http.HandlerFunc(s.RoomHandler)))
 	s.Gateway.Handle("/ws/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("serving ws", r.URL.Path)
+		parts := strings.Split(r.URL.Path, "/")
+		if len(parts) < 4 {
+			http.Error(w, "wont create new connection for that request", http.StatusNotFound)
+			return
+		}
+		tk := parts[3]
+		if !s.isValidKey(tk) {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
 		s.ServeWS(s.Rooms, w, r)
 	}))
 	return s
@@ -96,4 +118,25 @@ func (s *Server) ValidateToken(next http.Handler) http.Handler {
 
 func UnixToTime(unix int64) time.Time {
 	return time.UnixMilli(unix)
+}
+
+func (s *Server) addKey(k Key) {
+	s.Memory.Lock()
+	defer s.Memory.Unlock()
+	s.ValidKeys[k.Value] = &k
+
+}
+
+func (s *Server) isValidKey(key string) bool {
+	s.Memory.RLock()
+	defer s.Memory.RUnlock()
+	k, ok := s.ValidKeys[key]
+	if !ok {
+		return false
+	}
+	if time.Since(k.Expires) > 0 {
+		return false
+	}
+	fmt.Println("tkey is valid!")
+	return true
 }
