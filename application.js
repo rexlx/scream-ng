@@ -93,6 +93,32 @@ export class Applcation {
     this.socket.close();
     this.connected = false;
   }
+  async updateHistory() {
+    try {
+      let out = {
+        "user_id": this.user.email
+      };
+      const res = await fetch(`${this.api}/history`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.key}`
+        },
+        body: JSON.stringify(out)
+      });
+      const status = res.status;
+      const data = await res.json();
+      if (status === 200) {
+        // console.log("updateHistory", data, this.user);
+        this.user.history = data.history;
+      } else {
+        this.errors.push('history not set (server error)');
+      }
+    }
+    catch (error) {
+      this.errors.push("error updating history...", error.message);
+    }
+  }
   async addRoom(room) {
     try {
       const out = {
@@ -142,6 +168,7 @@ export class Applcation {
         // box.innerHTML = '';
         this.room = data;
         this.roomid = data.id;
+        this.updateHistory();
       } else {
         this.errors.push('room not set (server error)');
       }

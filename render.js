@@ -132,7 +132,7 @@ viewHistory.addEventListener('click', async (e) => {
             // historyItem.innerHTML = '';
         });
         viewHistory.appendChild(div);
-        }
+    }
     }
 });
 
@@ -196,7 +196,6 @@ async function sendMessage(url , data) {
 }
 
 function addMessageToBox(data) {
-    console.log("data", data);
     if (box.innerHTML === 'no messages yet') {
         box.innerHTML = '';
     }

@@ -49,6 +49,11 @@ func (u *User) updateHistory(roomid string) {
 	if len(u.History) >= 10 {
 		u.History = u.History[1:]
 	}
+	for _, v := range u.History {
+		if v == roomid {
+			return
+		}
+	}
 	u.History = append(u.History, roomid)
 }
 

@@ -246,7 +246,12 @@ func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u.updateHandle()
-
+	err = s.AddUser(u)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	u.Password = ""
 	out, err := json.Marshal(u)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -286,6 +291,35 @@ func (s *Server) AddRoomHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	res := make(map[string]string)
 	res["ok"] = "true"
+	out, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
+}
+
+type historyRequest struct {
+	UserID string `json:"user_id"`
+}
+
+func (s *Server) HistoryByIDHandler(w http.ResponseWriter, r *http.Request) {
+	var hr historyRequest
+	err := json.NewDecoder(r.Body).Decode(&hr)
+	if err != nil {
+		http.Error(w, "could not parse message", http.StatusBadRequest)
+		return
+	}
+	fmt.Println("history by id handler", hr)
+	u, err := s.GetUserByEmail(hr.UserID)
+	if err != nil {
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
+	res := make(map[string][]string)
+	res["history"] = u.History
+	fmt.Println("history by id handler", res, u)
 	out, err := json.Marshal(res)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
