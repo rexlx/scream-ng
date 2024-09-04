@@ -9,12 +9,12 @@ import (
 )
 
 type Room struct {
-	Name         string
-	MessageLimit int
-	ID           string
-	Messages     []WSMessage
-	Connections  map[*websocket.Conn]bool
-	Memory       *sync.RWMutex
+	Name         string                   `json:"name"`
+	MessageLimit int                      `json:"message_limit"`
+	ID           string                   `json:"id"`
+	Messages     []WSMessage              `json:"messages"`
+	Connections  map[*websocket.Conn]bool `json:"-"`
+	Memory       *sync.RWMutex            `json:"-"`
 	// Gateway      *http.ServeMux
 }
 
@@ -27,7 +27,9 @@ func NewRoom(name string, mLimit int) *Room {
 	uid := uuid.New().String()
 	mem := &sync.RWMutex{}
 	conns := make(map[*websocket.Conn]bool)
+	messages := []WSMessage{}
 	r := &Room{
+		Messages:     messages,
 		Connections:  conns,
 		Name:         name,
 		MessageLimit: mLimit,

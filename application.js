@@ -6,7 +6,7 @@ export class Applcation {
     this.key = apiKey;
     this.messages = [];
     this.errors = [];
-    this.room = 'welcome';
+    this.room = {};
     this.roomid = 'welcome';
     this.user = {};
     this.init();
@@ -28,9 +28,13 @@ export class Applcation {
       const status = res.status;
       const data = await res.json();
       if (status === 200) {
+        if (data.error) {
+          let msg = `login failed: ${data.message}`;
+          this.errors.push(msg);
+        }
         this.user = data;
       } else {
-        this.errors.push('login failed');
+        this.errors.push('login failed...');
       }
     } catch (error) {
       this.errors.push("login failed", error.message);
@@ -87,9 +91,9 @@ export class Applcation {
       const data = await res.json();
       console.log("status", status)
       if (status === 200) {
-        console.log("room set", room, data);
-        this.room = room;
-        this.roomid = data.roomid;
+        // box.innerHTML = '';
+        this.room = data;
+        this.roomid = data.id;
       } else {
         this.errors.push('room not set (server error)');
       }
@@ -97,11 +101,12 @@ export class Applcation {
         this.socket.onmesage = null;
         this.socket.close();
       }
-      this.establishWSConnection(this.roomid);
+
+      // this.establishWSConnection(this.roomid);
     } catch (error) {
       this.errors.push("error setting room...", error.message);
     }
-    console.log("setRoom done", this.room);
+    // console.log("setRoom done", this.room);
   }
   init() {
     this.testConnection();

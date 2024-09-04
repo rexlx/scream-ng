@@ -25,7 +25,7 @@ login.addEventListener('click', async (e) => {
 
 checkUser();
 
-app.establishWSConnection(app.room);
+app.establishWSConnection(app.room.id ? app.room.id : 'welcome');
 
 async function checkErrors() {
     const div = document.createElement('div');
@@ -45,15 +45,16 @@ setInterval(() => {
 addMessage.addEventListener('click', (e) => {
     e.preventDefault();
     let val = userMessage.value;
-    sendMessage(`${app.api}/message`, {
-        user: 'rxlx',
-        email: 'rxlx@nullferatu.com',
-        user_id: '1',
+    const out = {
+        email: app.user.email,
+        user_id: app.user.id,
         room_id: app.roomid,
-        value: val,
-        timestamp: Date.now(),
+        message: val,
+        time: "",
         reply_to: ''
-    });
+    }
+
+    sendMessage(`${app.api}/message`, out);
 });
 
 userMessage.addEventListener('keydown', (e) => {
@@ -67,20 +68,26 @@ joinRoom.addEventListener('click', async (e) => {
     e.preventDefault();
     await app.setRoom(userRoom.value);
     box.innerHTML = 'no messages yet';
-    roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room}</h4>`
+    roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? app.room.name : 'upside down'}</h4>`
+    if (app.room.messages && app.room.messages.length > 0) {
+        for (let m of app.messages) {
+            addMessageToBox(m);
+        }
+    }
+    app.establishWSConnection(app.room.id ? app.room.id : 'welcome');
     app.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log("WSM", data);
+        // console.log("WSM", data);
         addMessageToBox(data);
     }
     userRoom.value = '';
 });
 
-roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room}</h4>`
+roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? app.room.name : 'upside down'}</h4>`
     
 app.socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
-    console.log("WSM", data);
+    // console.log("WSM", data);
     addMessageToBox(data);
 };
 
@@ -93,12 +100,18 @@ viewHistory.addEventListener('click', async (e) => {
             div.innerHTML = h;
             div.addEventListener('click', async (e) => {
             e.preventDefault();
-            await app.setRoom(h);
             box.innerHTML = 'no messages yet';
-            roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room}</h4>`
+            await app.setRoom(h);
+            roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? app.room.name : 'upside down'}</h4>`
+            if (app.room.messages && app.room.messages.length > 0) {
+                for (let m of app.messages) {
+                    addMessageToBox(m);
+                }
+            }
+            app.establishWSConnection(app.room.id ? app.room.id : 'welcome');
             app.socket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                console.log("WSM", data);
+                // console.log("WSM", data);
                 addMessageToBox(data);
             }
             viewHistory.innerHTML = `history`;
@@ -132,11 +145,9 @@ async function sendMessage(url , data) {
 }
 
 function addMessageToBox(data) {
+    console.log("data", data);
     if (box.innerHTML === 'no messages yet') {
-        console.log("got it!");
         box.innerHTML = '';
-    } else {
-        console.log(box.innerHTML);
     }
     const out = `<div class="content has-text-info mb-3">
     <span class="has-text-dark"> ${data.time}</span>
