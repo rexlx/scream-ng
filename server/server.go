@@ -79,6 +79,12 @@ func NewServer(fileHandle string, dbName string) *Server {
 	devRoom := NewRoom("welcome", 100)
 	devRoom.ID = "welcome"
 	s.Rooms["welcome"] = devRoom
+	s.ValidKeys["undefined"] = &Key{
+		Value:       "undefined",
+		Expires:     time.Now().Add(time.Minute * 24),
+		Issued:      time.Now(),
+		RequestedBy: "system",
+	}
 	s.Gateway.Handle("/login", http.HandlerFunc(s.LoginHandler))
 	s.Gateway.Handle("/addroom", s.ValidateToken(http.HandlerFunc(s.AddRoomHandler)))
 	s.Gateway.Handle("/static/", http.StripPrefix("/static/", s.ServeStaticDirectory()))
