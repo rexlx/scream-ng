@@ -37,6 +37,7 @@ async function checkErrors() {
         div.innerHTML = error;
         errorDiv.appendChild(div);
     }
+    app.errors = [];
 }
 
 setInterval(() => {
