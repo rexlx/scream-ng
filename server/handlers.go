@@ -41,6 +41,11 @@ func (s *Server) MessageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing id", http.StatusBadRequest)
 		return
 	}
+	// room, ok := s.Rooms[m.RoomID]
+	// if !ok {
+	// 	http.Error(w, "room not found", http.StatusNotFound)
+	// 	return
+	// }
 
 	formattedTime := time.Now()
 	s.Messagechan <- WSMessage{
@@ -60,6 +65,44 @@ func (s *Server) MessageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+	w.Write(out)
+}
+
+type UserPostRequest struct {
+	Email   string `json:"email"`
+	Content string `json:"content"`
+}
+
+func (s *Server) AddPostHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("add post handler")
+	var upr UserPostRequest
+	err := json.NewDecoder(r.Body).Decode(&upr)
+	if err != nil {
+		http.Error(w, "could not parse message", http.StatusBadRequest)
+		return
+	}
+	if upr.Email == "" || upr.Content == "" {
+		http.Error(w, "missing email or content", http.StatusBadRequest)
+		return
+	}
+	u, err := s.GetUserByEmail(upr.Email)
+	if err != nil {
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
+	u.updatePosts(upr.Content)
+	err = s.AddUser(u)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	out, err := json.Marshal(u)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
 }
 
@@ -321,6 +364,45 @@ func (s *Server) HistoryByIDHandler(w http.ResponseWriter, r *http.Request) {
 	res["history"] = u.History
 	fmt.Println("history by id handler", res, u)
 	out, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
+}
+
+type ProfileUpdateRequest struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	About     string `json:"about"`
+}
+
+func (s *Server) UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
+	var pur ProfileUpdateRequest
+	err := json.NewDecoder(r.Body).Decode(&pur)
+	if err != nil {
+		http.Error(w, "could not parse message", http.StatusBadRequest)
+		return
+	}
+	fmt.Println("update user profile", pur)
+	u, err := s.GetUserByEmail(pur.Email)
+	if err != nil {
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
+	u.FirstName = pur.FirstName
+	u.LastName = pur.LastName
+	u.About = pur.About
+	u.updateHandle()
+	err = s.AddUser(u)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	out, err := json.Marshal(u)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

@@ -42,6 +42,49 @@ export class Applcation {
     }
 
   }
+  async addPost(out) {
+    try {
+      const res = await fetch(`${this.api}/addpost`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.key}`
+        },
+        body: JSON.stringify(out)
+      });
+      const status = res.status;
+      const data = await res.json();
+      if (status === 200) {
+        this.user = data;
+      } else {
+        this.errors.push('post not added...');
+      }
+    } catch (error) {
+      this.errors.push("error adding post...", error.message);
+    }
+  }
+  async updateProfile(out) {
+    try {
+      const res = await fetch(`${this.api}/profile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.key}`
+        },
+        body: JSON.stringify(out)
+      });
+      const status = res.status;
+      const data = await res.json();
+      if (status === 200) {
+        console.log("profile updated", data);
+        this.user = data;
+      } else {
+        this.errors.push('profile not updated...');
+      }
+    } catch (error) {
+      this.errors.push("error updating profile...", error.message);
+    }
+  }
   async getTempKey() {
     try {
       const res = await fetch(`${this.api}/hotsauce`, {

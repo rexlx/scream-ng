@@ -86,11 +86,13 @@ func NewServer(fileHandle string, dbName string) *Server {
 		RequestedBy: "system",
 	}
 	s.Gateway.Handle("/login", http.HandlerFunc(s.LoginHandler))
+	s.Gateway.Handle("/addpost", s.ValidateToken(http.HandlerFunc(s.AddPostHandler)))
 	s.Gateway.Handle("/addroom", s.ValidateToken(http.HandlerFunc(s.AddRoomHandler)))
 	s.Gateway.Handle("/static/", http.StripPrefix("/static/", s.ServeStaticDirectory()))
 	s.Gateway.Handle("/test", s.ValidateToken(http.HandlerFunc(s.TestHandler)))
 	s.Gateway.Handle("/message", s.ValidateToken(http.HandlerFunc(s.MessageHandler)))
 	s.Gateway.Handle("/adduser", s.ValidateToken(http.HandlerFunc(s.AddUserHandler)))
+	s.Gateway.Handle("/profile", s.ValidateToken(http.HandlerFunc(s.UpdateUserProfile)))
 	s.Gateway.Handle("/history", s.ValidateToken(http.HandlerFunc(s.HistoryByIDHandler)))
 	s.Gateway.Handle("/hotsauce", s.ValidateToken(http.HandlerFunc(s.TempKeyHandler)))
 	s.Gateway.Handle("/room/", http.StripPrefix("/room", http.HandlerFunc(s.RoomHandler)))

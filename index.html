@@ -49,6 +49,7 @@
                     <p class="menu-label">menu</p>
                     <ul class="menu-list">
                         <li><a id="home" class="is-active">home</a></li>
+                        <li><a id="profile">profile</a></li>
                         <li id="historyItem"><a id="viewHistory">history</a></li>
                         <li><a id="userRooms">rooms</a></li>
                     </ul>
@@ -67,7 +68,7 @@
                     </div>
                 </aside>
             </div>
-            <div class="column">
+            <div class="column" id="chat-content">
                 <div class="block" id="roomName"></div>
                 <div class="box mydisplay" id="mainBox">no messages yet</div>
                 <form action="">
@@ -85,18 +86,83 @@
             </div>
         </div>
     </div>
-    <div class="footer" id="theFooter">
+    <div class="section" id="profile-screen">
         <div class="columns">
             <div class="column is-one-quarter">
-                <p class="has-text-black">place holder</p>
+                <aside class="menu">
+                    <p class="menu-label">menu</p>
+                    <ul class="menu-list">
+                        <li><a id="homeFromProfile">home</a></li>
+                        <li><a id="editProfile" class="is-active">edit</a></li>
+                        <li><a id="postsItem">posts</a></li>
+                        <li id="historyItem"><a id="viewHistory">history</a></li>
+                        <li><a id="userRooms">rooms</a></li>
+                    </ul>
+                </aside>
             </div>
-            <div class="column">
-                <div class="block">
-                    <p class="has-text-black">i will find you</p>
+            <div class="column is-three-quarters" id="viewPosts"></div>
+        </div>
+        <div class="columns" id="postsColumn">
+            <div class="column" id="addPosts">
+                <div class="field">
+                    <div class="control">
+                        <textarea class="textarea" placeholder="type your post here" id="userPost"></textarea>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-link is-outlined" id="addPost">post</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="columns" id="editProfileColumn">
+            <div class="column is-three-quarters" id="setProfile">
+                <div class="field">
+                    <div class="control">
+                        <input class="input" type="text" placeholder="first name" id="firstName" />
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="control">
+                        <input class="input" type="text" placeholder="last name" id="lastName" />
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="control">
+                        <input class="input" type="text" placeholder="email" id="editEmail" disabled />
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="control">
+                        <textarea class="textarea" placeholder="about" id="about"> </textarea>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-warning is-outlined" id="saveProfile">save</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-link is-outlined" id="cancelProfile">cancel</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+        <div class="footer" id="theFooter">
+            <div class="columns">
+                <div class="column is-one-quarter">
+                    <p class="has-text-black">place holder</p>
+                </div>
+                <div class="column">
+                    <div class="block">
+                        <p class="has-text-black">i will find you</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 </body>
 <script type="module" src="./render.js"></script>
 

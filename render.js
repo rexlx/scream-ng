@@ -8,6 +8,8 @@ const addMessage = document.getElementById('addMessage');
 const login = document.getElementById('login');
 const loginScreen = document.getElementById('login-screen');
 const mainContent = document.getElementById('main-content');
+const profileMenu = document.getElementById('profile');
+const profileScreen = document.getElementById('profile-screen');
 const theFooter = document.getElementById('theFooter');
 const roomName = document.getElementById('roomName');
 const userRoom = document.getElementById('userRoom');
@@ -17,6 +19,7 @@ const userPassword = document.getElementById('password');
 const viewHistory = document.getElementById('viewHistory');
 const userRooms = document.getElementById('userRooms');
 const addRoom = document.getElementById('addRoom');
+const cancelProfile = document.getElementById('cancelProfile');
 
 login.addEventListener('click', async (e) => {
     e.preventDefault();
@@ -59,8 +62,9 @@ setInterval(() => {
 addMessage.addEventListener('click', (e) => {
     e.preventDefault();
     let val = userMessage.value;
+    let handle = app.user.handle ? app.user.handle : app.user.email;
     const out = {
-        email: app.user.email,
+        email: handle,
         user_id: app.user.id,
         room_id: app.roomid,
         message: val,
@@ -173,6 +177,104 @@ userRooms.addEventListener('click', async (e) => {
     }
 });
 
+profileMenu.addEventListener('click', (e) => {
+    e.preventDefault();
+    const homeFromProfile = document.getElementById('homeFromProfile');
+    const saveProfile = document.getElementById('saveProfile');
+    const email = document.getElementById('editEmail');
+    const firstName = document.getElementById('firstName');
+    const lastName = document.getElementById('lastName');
+    const about = document.getElementById('about');
+    const viewPosts = document.getElementById('viewPosts');
+    const editProfileColumn = document.getElementById('editProfileColumn');
+    const postColumn = document.getElementById('postsColumn');
+    const postsItem = document.getElementById('postsItem');
+    const addPost = document.getElementById('addPost');
+    loginScreen.style.display = 'none';
+    editProfileColumn.style.display = 'block';
+    postColumn.style.display = 'none';
+    profileScreen.style.display = 'block';
+    mainContent.style.display = 'none';
+    theFooter.style.display = 'none';
+    email.value = app.user.email;
+    firstName.value = app.user.first_name;
+    lastName.value = app.user.last_name;
+    about.value = app.user.about;
+    cancelProfile.addEventListener('click', (e) => {
+        e.preventDefault();
+        checkUser();
+    });
+    saveProfile.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const out = {
+            email: email.value,
+            first_name: firstName.value,
+            last_name: lastName.value,
+            about: about.value
+        }
+        await app.updateProfile(out);
+        checkUser();
+    });
+
+    // posts menu item is clicked
+    postsItem.addEventListener('click', async (e) => {
+        e.preventDefault();
+        editProfileColumn.style.display = 'none';
+        postColumn.style.display = 'block';
+        profileScreen.style.display = 'block';
+        mainContent.style.display = 'none';
+        theFooter.style.display = 'none';
+        viewPosts.innerHTML = '';
+        if (app.user.posts) {
+            for (let p of app.user.posts) {
+                const article = document.createElement('article');
+                article.classList.add('message', 'is-dark');
+                const div = document.createElement('div');
+                div.classList.add('has-text-link-light', 'message-body');
+                div.innerHTML = p.content;
+                div.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    box.innerHTML = 'no messages yet';
+                    await app.setRoom(p);
+                    roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? app.room.name : 'upside down'}</h4>`
+                    if (app.room.messages && app.room.messages.length > 0) {
+                        for (let m of app.messages) {
+                            addMessageToBox(m);
+                        }
+                    }
+                    app.establishWSConnection(app.room.id ? app.room.id : 'welcome', app.tk.value);
+                    app.socket.onmessage = (event) => {
+                        const data = JSON.parse(event.data);
+                        // console.log("WSM", data);
+                        addMessageToBox(data);
+                    }
+                    viewPosts.innerHTML = `posts`;
+                    // historyItem.innerHTML = '';
+                });
+                article.appendChild(div);
+                viewPosts.appendChild(article);
+            }
+        }
+
+    });
+    const userPost = document.getElementById('userPost');
+    addPost.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const out = {
+            content: userPost.value,
+            email: app.user.email
+        }
+        await app.addPost(out);
+        userPost.value = '';
+        postsItem.click();
+    });
+        
+    homeFromProfile.addEventListener('click', (e) => {
+        e.preventDefault();
+        checkUser();
+    });
+});
+
 async function sendMessage(url , data) {
     try {
         const resp = await fetch(url, {
@@ -210,10 +312,12 @@ function addMessageToBox(data) {
 function checkUser() {
     if (app.user.id) {
         loginScreen.style.display = 'none';
+        profileScreen.style.display = 'none';
         mainContent.style.display = 'block';
         theFooter.style.display = 'block';
     } else {
         loginScreen.style.display = 'block';
+        profileScreen.style.display = 'none';
         theFooter.style.display = 'none';
         mainContent.style.display = 'none';
     }
