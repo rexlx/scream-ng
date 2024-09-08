@@ -283,19 +283,45 @@ export class Applcation {
     const out = await this.encodeString(val, secretKey);
     return { key: keyPair.name, data: out };
   }
-  async decodeString(str, k) {
+  async decodeString(str, k, iv) {
     const decoder = new TextDecoder();
-    const data = atob(str);
-    const encrypted = new Uint8Array(data.match(/[\s\S]/g).map(ch => ch.charCodeAt(0)));
-    const decrypted = await window.crypto.subtle.decrypt(
-      {
-        name: "AES-GCM",
-        iv: encrypted.slice(0, 16)
-      },
-      k,
-      encrypted.slice(16)
+  const encrypted = new Uint8Array(atob(str).split("").map(c => c.charCodeAt(0)));
+
+  // Decode the Base64 encoded IV
+  const ivNoPadding = iv.replace(/=/g, "");
+  const ivBytes = new Uint8Array(atob(ivNoPadding).split("").map(c => c.charCodeAt(0)));
+
+  const decrypted = await window.crypto.subtle.decrypt(
+    {
+      name: "AES-GCM",
+      iv: ivBytes // Use the correct IV
+    },
+    k,
+    encrypted
+  );
+  return decoder.decode(decrypted);
+  }
+  async decrypt(val, key) {
+    const keyPair = this.enckeys.find(k => k.name === key.key);
+    if (!keyPair) {
+      console.log(`No key found for ${key}`);
+      return;
+    }
+    const b64NoPadding = keyPair.key.replace(/=/g, "");
+    const keyBytes = Uint8Array.from(atob(b64NoPadding), c => c.charCodeAt(0));
+    if (keyBytes.length !== 32) {
+      console.log(`Invalid key length for ${keyPair.key}: ${keyBytes.length} bytes`);
+      return;
+    }
+    const secretKey = await window.crypto.subtle.importKey(
+      "raw",
+      keyBytes,
+      { name: "AES-GCM" },
+      false,
+      ["encrypt", "decrypt"]
     );
-    return decoder.decode(decrypted);
+    const out = await this.decodeString(val, secretKey, key.data.iv);
+    return out;
   }
   init() {
     this.testConnection();

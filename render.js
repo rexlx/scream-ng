@@ -59,20 +59,21 @@ setInterval(() => {
     }
 }, 5000);
 
-addMessage.addEventListener('click', (e) => {
+addMessage.addEventListener('click', async (e) => {
     e.preventDefault();
     let val = userMessage.value;
     let handle = app.user.handle ? app.user.handle : app.user.email;
+    let x = await app.encrypt(val);
     const out = {
         email: handle,
         user_id: app.user.id,
         room_id: app.roomid,
-        message: val,
+        message: x.data.data,
         time: "",
         reply_to: ''
     }
-    let x = app.encrypt(val);
-    console.log("encrypted", x);
+    // let y = app.decrypt(x.data.data, x);
+    // console.log("encrypted", y);
     sendMessage(`${app.api}/message`, out);
 });
 
@@ -203,6 +204,8 @@ profileMenu.addEventListener('click', (e) => {
     about.value = app.user.about;
     cancelProfile.addEventListener('click', (e) => {
         e.preventDefault();
+        postColumn.style.display = 'none';
+        editProfileColumn.style.display = 'none';
         checkUser();
     });
     saveProfile.addEventListener('click', async (e) => {
@@ -305,7 +308,7 @@ function addMessageToBox(data) {
     const out = `<div class="content has-text-info mb-3">
     <span class="has-text-dark"> ${data.time}</span>
     <span class="has-text-link"> ${data.email}</span>
-    <p class="has-text-primary content">${data.message}</p>
+    <p class="has-text-primary content wrap">${data.message}</p>
     </div>`;
     box.innerHTML += out;
 }
