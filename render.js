@@ -71,7 +71,8 @@ addMessage.addEventListener('click', (e) => {
         time: "",
         reply_to: ''
     }
-
+    let x = app.encrypt(val);
+    console.log("encrypted", x);
     sendMessage(`${app.api}/message`, out);
 });
 
@@ -314,11 +315,11 @@ function checkUser() {
         loginScreen.style.display = 'none';
         profileScreen.style.display = 'none';
         mainContent.style.display = 'block';
-        theFooter.style.display = 'block';
+        theFooter.style.display = 'none';
     } else {
         loginScreen.style.display = 'block';
         profileScreen.style.display = 'none';
-        theFooter.style.display = 'none';
+        theFooter.style.display = 'block';
         mainContent.style.display = 'none';
     }
 }

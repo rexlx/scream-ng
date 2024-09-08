@@ -1,5 +1,23 @@
 export class Applcation {
   constructor(api, apiKey) {
+    this.enckeys = [
+      {
+        "name": "malfunctioning-unapproachability",
+        "key": "Em9k8X2SsEDHbC6mF9jwBug8BGfLYC2TR97hzKzCaAY="
+      },
+      {
+        "name": "tegular-peripatopsidae",
+        "key": "eOSPDQfRMp+RwOKE4v7TQc5yGgeg2ABQ23pjWg8kWAg="
+      },
+      {
+        "name": "elective-experience",
+        "key": "Wh7toVpICwu53zFH7+1PagoveuCK6uquyVfr8TSIwQw="
+      },
+      {
+        "name": "heraldic-epacris",
+        "key": "QnyTODU7KLY9taRt7V2sNyRflu97U3LYmnx4uhCsLDM="
+      }
+    ];
     this.socket = {};
     this.connected = false;
     this.api = api;
@@ -11,6 +29,9 @@ export class Applcation {
     this.roomid = 'welcome';
     this.user = {};
     this.init();
+  }
+  getRandomEncodingKey() {
+    return this.enckeys[Math.floor(Math.random() * this.enckeys.length)];
   }
   async login(email, password) {
     try {
@@ -225,6 +246,56 @@ export class Applcation {
       this.errors.push("error setting room...", error.message);
     }
     // console.log("setRoom done", this.room);
+  }
+  async encodeString(str, k) {
+    const hotsauce = window.crypto.getRandomValues(new Uint8Array(16));
+    const encoder = new TextEncoder();
+    const data = encoder.encode(str);
+
+    const cipher = await window.crypto.subtle.encrypt(
+      {
+        name: "AES-GCM",
+        iv: hotsauce
+      },
+      k,
+      data
+    );
+    const encrypted = new Uint8Array(cipher);
+    const base64 = btoa(String.fromCharCode(...encrypted));
+    return { iv: btoa(String.fromCharCode(...hotsauce)), data: base64 };
+  }
+  async encrypt(val) {
+    const keyPair = this.getRandomEncodingKey();
+    const b64NoPadding = keyPair.key.replace(/=/g, "");
+    // const keyBytes = new Uint8Array(keyPair.key.match(/[\s\S]/g).map(ch => ch.charCodeAt(0)));
+    const keyBytes = Uint8Array.from(atob(b64NoPadding), c => c.charCodeAt(0));
+    if (keyBytes.length !== 32) {
+      console.log(`Invalid key length for ${keyPair.key}: ${keyBytes.length} bytes`);
+      return;
+    }
+    const secretKey = await window.crypto.subtle.importKey(
+      "raw",
+      keyBytes,
+      { name: "AES-GCM" },
+      false,
+      ["encrypt", "decrypt"]
+    );
+    const out = await this.encodeString(val, secretKey);
+    return { key: keyPair.name, data: out };
+  }
+  async decodeString(str, k) {
+    const decoder = new TextDecoder();
+    const data = atob(str);
+    const encrypted = new Uint8Array(data.match(/[\s\S]/g).map(ch => ch.charCodeAt(0)));
+    const decrypted = await window.crypto.subtle.decrypt(
+      {
+        name: "AES-GCM",
+        iv: encrypted.slice(0, 16)
+      },
+      k,
+      encrypted.slice(16)
+    );
+    return decoder.decode(decrypted);
   }
   init() {
     this.testConnection();
