@@ -23,7 +23,7 @@ body {
 }
 .mydisplay {
     height: 300px;
-    width: 760px;
+    /* width: 760px; */
     overflow-y: scroll;
 }
 
