@@ -65,12 +65,14 @@ addMessage.addEventListener('click', async (e) => {
     let handle = app.user.handle ? app.user.handle : app.user.email;
     let x = await app.encrypt(val);
     const out = {
+        iv: x.data.iv,
         email: handle,
         user_id: app.user.id,
         room_id: app.roomid,
         message: x.data.data,
         time: "",
-        reply_to: ''
+        reply_to: '',
+        hotsauce: x.key
     }
     // let y = app.decrypt(x.data.data, x);
     // console.log("encrypted", y);
@@ -95,18 +97,26 @@ joinRoom.addEventListener('click', async (e) => {
         }
     }
     app.establishWSConnection(app.room.id ? app.room.id : 'welcome', app.tk.value);
-    app.socket.onmessage = (event) => {
+    app.socket.onmessage = async (event) => {
         const data = JSON.parse(event.data);
+        if (data.hotsauce) {
+            let y = await app.decrypt(data.message, data);
+            data.message = y;
+        }
         // console.log("WSM", data);
         addMessageToBox(data);
-    }
+    };
     userRoom.value = '';
 });
 
 roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? app.room.name : 'upside down'}</h4>`
     
-app.socket.onmessage = (event) => {
+app.socket.onmessage = async (event) => {
     const data = JSON.parse(event.data);
+    if (data.hotsauce) {
+        let y = await app.decrypt(data.message, data);
+        data.message = y;
+    }
     // console.log("WSM", data);
     addMessageToBox(data);
 };
@@ -129,8 +139,12 @@ viewHistory.addEventListener('click', async (e) => {
                 }
             }
             app.establishWSConnection(app.room.id ? app.room.id : 'welcome', app.tk.value);
-            app.socket.onmessage = (event) => {
+            app.socket.onmessage = async (event) => {
                 const data = JSON.parse(event.data);
+                if (data.hotsauce) {
+                    let y = await app.decrypt(data.message, data);
+                    data.message = y;
+                }
                 // console.log("WSM", data);
                 addMessageToBox(data);
             }
@@ -138,7 +152,7 @@ viewHistory.addEventListener('click', async (e) => {
             // historyItem.innerHTML = '';
         });
         viewHistory.appendChild(div);
-    }
+    };
     }
 });
 
@@ -166,11 +180,15 @@ userRooms.addEventListener('click', async (e) => {
                 }
             }
             app.establishWSConnection(app.room.id ? app.room.id : 'welcome', app.tk.value);
-            app.socket.onmessage = (event) => {
+            app.socket.onmessage = async (event) => {
                 const data = JSON.parse(event.data);
+                if (data.hotsauce) {
+                    let y = await app.decrypt(data.message, data);
+                    data.message = y;
+                }
                 // console.log("WSM", data);
                 addMessageToBox(data);
-            }
+            };
             userRooms.innerHTML = `rooms`;
             // historyItem.innerHTML = '';
         });
@@ -247,11 +265,15 @@ profileMenu.addEventListener('click', (e) => {
                         }
                     }
                     app.establishWSConnection(app.room.id ? app.room.id : 'welcome', app.tk.value);
-                    app.socket.onmessage = (event) => {
+                    app.socket.onmessage = async (event) => {
                         const data = JSON.parse(event.data);
+                        if (data.hotsauce) {
+                            let y = await app.decrypt(data.message, data);
+                            data.message = y;
+                        }
                         // console.log("WSM", data);
                         addMessageToBox(data);
-                    }
+                    };
                     viewPosts.innerHTML = `posts`;
                     // historyItem.innerHTML = '';
                 });

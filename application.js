@@ -302,7 +302,7 @@ export class Applcation {
   return decoder.decode(decrypted);
   }
   async decrypt(val, key) {
-    const keyPair = this.enckeys.find(k => k.name === key.key);
+    const keyPair = this.enckeys.find(k => k.name === key.hotsauce);
     if (!keyPair) {
       console.log(`No key found for ${key}`);
       return;
@@ -320,7 +320,7 @@ export class Applcation {
       false,
       ["encrypt", "decrypt"]
     );
-    const out = await this.decodeString(val, secretKey, key.data.iv);
+    const out = await this.decodeString(val, secretKey, key.iv);
     return out;
   }
   init() {

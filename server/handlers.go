@@ -26,7 +26,6 @@ func (s *Server) TestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) MessageHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("message handler")
 	var m WSMessage
 	// var m Message
 
@@ -36,6 +35,7 @@ func (s *Server) MessageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "could not parse message", http.StatusBadRequest)
 		return
 	}
+	fmt.Printf("message handler %+v", m)
 	if m.UserID == "" || m.RoomID == "" {
 		fmt.Print("missing id")
 		http.Error(w, "missing id", http.StatusBadRequest)
@@ -49,12 +49,14 @@ func (s *Server) MessageHandler(w http.ResponseWriter, r *http.Request) {
 
 	formattedTime := time.Now()
 	s.Messagechan <- WSMessage{
-		Time:    formattedTime.Format("01/02 15:04"),
-		Message: m.Message,
-		UserID:  m.UserID,
-		Email:   m.Email,
-		RoomID:  m.RoomID,
-		ReplyTo: m.ReplyTo,
+		InitialVector: m.InitialVector,
+		Hotsauce:      m.Hotsauce,
+		Time:          formattedTime.Format("01/02 15:04"),
+		Message:       m.Message,
+		UserID:        m.UserID,
+		Email:         m.Email,
+		RoomID:        m.RoomID,
+		ReplyTo:       m.ReplyTo,
 	}
 	// fmt.Println("message received", m)
 	res := make(map[string]string)

@@ -18,12 +18,14 @@ var upgrader = websocket.Upgrader{
 }
 
 type WSMessage struct {
-	RoomID  string `json:"room_id"`
-	Time    string `json:"time"`
-	ReplyTo string `json:"reply_to"`
-	Message string `json:"message"`
-	UserID  string `json:"user_id"`
-	Email   string `json:"email"`
+	InitialVector string `json:"iv"`
+	Hotsauce      string `json:"hotsauce"`
+	RoomID        string `json:"room_id"`
+	Time          string `json:"time"`
+	ReplyTo       string `json:"reply_to"`
+	Message       string `json:"message"`
+	UserID        string `json:"user_id"`
+	Email         string `json:"email"`
 }
 
 type WSHandler struct {
