@@ -61,22 +61,31 @@ setInterval(() => {
 
 addMessage.addEventListener('click', async (e) => {
     e.preventDefault();
-    let val = userMessage.value;
-    let handle = app.user.handle ? app.user.handle : app.user.email;
-    let x = await app.encrypt(val);
-    const out = {
-        iv: x.data.iv,
-        email: handle,
-        user_id: app.user.id,
-        room_id: app.roomid,
-        message: x.data.data,
-        time: "",
-        reply_to: '',
-        hotsauce: x.key
+    let out = {};
+    try {
+        let val = userMessage.value;
+        let handle = app.user.handle ? app.user.handle : app.user.email;
+        out = {
+            email: handle,
+            user_id: app.user.id,
+            room_id: app.roomid,
+            message: val,
+            time: "",
+            reply_to: '',
+        }
+        if (app.enckeys.length > 0) {
+            let x = await app.encrypt(val);
+            out.hotsauce = x.key;
+            out.message = x.data.data;
+            out.iv = x.data.iv;
+        }
+        console.log("out", out);
+        // let y = app.decrypt(x.data.data, x);
+        // console.log("encrypted", y);
+        sendMessage(`${app.api}/message`, out);
+    } catch (error) {
+        app.errors.push("client error...", error.message);
     }
-    // let y = app.decrypt(x.data.data, x);
-    // console.log("encrypted", y);
-    sendMessage(`${app.api}/message`, out);
 });
 
 userMessage.addEventListener('keydown', (e) => {

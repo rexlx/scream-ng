@@ -35,7 +35,7 @@ func (s *Server) MessageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "could not parse message", http.StatusBadRequest)
 		return
 	}
-	fmt.Printf("message handler %+v", m)
+	// fmt.Printf("message handler %+v", m)
 	if m.UserID == "" || m.RoomID == "" {
 		fmt.Print("missing id")
 		http.Error(w, "missing id", http.StatusBadRequest)
@@ -76,7 +76,7 @@ type UserPostRequest struct {
 }
 
 func (s *Server) AddPostHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("add post handler")
+	// fmt.Println("add post handler")
 	var upr UserPostRequest
 	err := json.NewDecoder(r.Body).Decode(&upr)
 	if err != nil {
@@ -147,7 +147,7 @@ type RoomRequest struct {
 }
 
 func (s *Server) TempKeyHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("temp key handler")
+	// fmt.Println("temp key handler")
 	var k Key
 	k.Expires = time.Now().Add(time.Minute * 5)
 	k.Value = uuid.New().String()
@@ -169,7 +169,7 @@ func (s *Server) RoomHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "could not parse message", http.StatusBadRequest)
 		return
 	}
-	fmt.Println("room handler", rr)
+	// fmt.Println("room handler", rr)
 	if rr.Name == "" {
 		http.Error(w, "missing name", http.StatusBadRequest)
 		return
@@ -222,7 +222,7 @@ type UserRequest struct {
 }
 
 func (s *Server) AddUserHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("add user handler")
+	// fmt.Println("add user handler")
 	var nu UserRequest
 	err := json.NewDecoder(r.Body).Decode(&nu)
 	if err != nil {
@@ -262,7 +262,7 @@ func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "could not parse message", http.StatusBadRequest)
 		return
 	}
-	fmt.Println("login handler", lr)
+	// fmt.Println("login handler", lr)
 	if lr.Email == "" || lr.Password == "" {
 		http.Error(w, "missing email or password", http.StatusBadRequest)
 		return
@@ -312,7 +312,7 @@ func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 // func (s *Server) ServeDir()
 
 func (s *Server) AddRoomHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("add room handler")
+	// fmt.Println("add room handler")
 	var rr RoomRequest
 	err := json.NewDecoder(r.Body).Decode(&rr)
 	if err != nil {
@@ -356,7 +356,7 @@ func (s *Server) HistoryByIDHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "could not parse message", http.StatusBadRequest)
 		return
 	}
-	fmt.Println("history by id handler", hr)
+	// fmt.Println("history by id handler", hr)
 	u, err := s.GetUserByEmail(hr.UserID)
 	if err != nil {
 		http.Error(w, "user not found", http.StatusNotFound)
@@ -364,7 +364,7 @@ func (s *Server) HistoryByIDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	res := make(map[string][]string)
 	res["history"] = u.History
-	fmt.Println("history by id handler", res, u)
+	// fmt.Println("history by id handler", res, u)
 	out, err := json.Marshal(res)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
