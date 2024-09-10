@@ -1,4 +1,6 @@
 
+// import { dialog } from 'electron';
+// import { read, readFile } from 'original-fs';
 import { Applcation } from './application.js';
 const box = document.getElementById('mainBox');
 const errorDiv = document.getElementById('errors');
@@ -20,6 +22,7 @@ const viewHistory = document.getElementById('viewHistory');
 const userRooms = document.getElementById('userRooms');
 const addRoom = document.getElementById('addRoom');
 const cancelProfile = document.getElementById('cancelProfile');
+const loadKeydb = document.getElementById('loadKeydb');
 
 login.addEventListener('click', async (e) => {
     e.preventDefault();
@@ -309,6 +312,53 @@ profileMenu.addEventListener('click', (e) => {
         checkUser();
     });
 });
+
+loadKeydb.addEventListener('click', async (e) => {
+    e.preventDefault();
+    // electron object defined in preload.js -> ipcRenderer.invoke('dialog', method, config)
+    try {
+        electron.openDialog('showOpenDialog', {
+            properties: ['openFile'],
+            filters: [
+                { name: 'JSON', extensions: ['json'] },
+                { name: 'All Files', extensions: ['*'] }
+            ],
+
+        }).then(async(result) => {
+            if (!result) {
+                app.errors.push("client error...", "cancelled");
+                return;
+            }
+            const path = result.filePaths[0];
+            readFile(path).then((data) => {
+                // might need to add a try here in the future...
+                const blob = new Blob([data], { type: 'application/json' });
+                const reader = new FileReader();
+                reader.readAsText(blob);
+                reader.onload = async (e) => {
+                    const text = e.target.result;
+                    const obj = JSON.parse(text);
+                    if (obj.length > 0) {
+                        app.enckeys = obj;
+                    }
+                };
+                reader.onerror = (e) => {
+                    app.errors.push("client error...", e.message);
+                };
+            }).catch((error) => {
+                console.log("error", error);
+                app.errors.push("client error...", error.message);
+            });
+        }).catch((error) => {
+            console.log("error", error);
+            app.errors.push("client error...", error.message);
+        });
+    } catch (error) {
+        console.log("error", error);
+        app.errors.push("client error...", error.message);
+    }
+});
+
 
 async function sendMessage(url , data) {
     try {

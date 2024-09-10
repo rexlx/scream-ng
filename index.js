@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron')
+const fs = require('fs')
 const path = require('node:path')
 
 const createWindow = () => {
@@ -19,8 +20,18 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
   ipcMain.handle('dialog', (event, method, params) => {       
-    dialog[method](params);
+    return dialog[method](params);
   });
+  ipcMain.handle('read-file', async (event, path) => {
+    try {
+      const data = await fs.promises.readFile(path, 'utf8');
+      return data;
+    } catch (error) {
+      console.error(error);
+      return error.message;
+    }
+  });
+    
     createWindow()
   
   app.on('activate', () => {

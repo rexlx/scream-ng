@@ -8,4 +8,5 @@ contextBridge.exposeInMainWorld('versions', {
 contextBridge.exposeInMainWorld('electron', {
   openDialog: (method, config) => ipcRenderer.invoke('dialog', method, config)
 });
+contextBridge.exposeInMainWorld('readFile', (path) => ipcRenderer.invoke('read-file', path));
 // contextBridge.exposeInMainWorld('dialog', dialog)

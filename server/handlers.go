@@ -41,11 +41,6 @@ func (s *Server) MessageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing id", http.StatusBadRequest)
 		return
 	}
-	// room, ok := s.Rooms[m.RoomID]
-	// if !ok {
-	// 	http.Error(w, "room not found", http.StatusNotFound)
-	// 	return
-	// }
 
 	formattedTime := time.Now()
 	s.Messagechan <- WSMessage{
