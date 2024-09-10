@@ -1,0 +1,1 @@
+the desktop version of [scream](https://github.com/rexlx/scream). with e2e encoding.
