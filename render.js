@@ -252,6 +252,7 @@ profileMenu.addEventListener('click', (e) => {
     let details = `<h4 class="title is-4 has-text-primary">${thisUser.email}</h4><p>${thisUser.about}</p>`;
     userDetails.innerHTML = details;
     if (thisUser.posts) {
+        viewPosts.innerHTML = '';
         for (let p of thisUser.posts) {
             const article = document.createElement('article');
             article.classList.add('message', 'is-dark');
