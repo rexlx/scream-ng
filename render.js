@@ -379,7 +379,6 @@ profileMenu.addEventListener('click', (e) => {
 
 loadKeydb.addEventListener('click', async (e) => {
     e.preventDefault();
-    // electron object defined in preload.js -> ipcRenderer.invoke('dialog', method, config)
     try {
         electron.openDialog('showOpenDialog', {
             properties: ['openFile'],
@@ -433,7 +432,7 @@ async function sendMessage(url , data) {
         });
         const status = resp.status;
         if (status === 200) {
-            app.messages.push(data);
+            app.messages.sent++
             userMessage.value = '';
         } else {
             app.errors.push(`Error: ${status} when sending message`);
@@ -447,11 +446,6 @@ function addMessageToBox(data) {
     if (box.innerHTML === 'no messages yet') {
         box.innerHTML = '';
     }
-    // const out = `<div class="content has-text-info mb-3">
-    // <span class="has-text-dark"> ${data.time}</span>
-    // <span class="has-text-link"> ${data.email}</span>
-    // <p class="has-text-primary content wrap">${data.message}</p>
-    // </div>`;
     const message = document.createElement('div');
     message.classList.add('content', 'has-text-info', 'mb-3');
     message.dataset.id = data.user_id;
@@ -491,7 +485,3 @@ function checkUser() {
         mainContent.style.display = 'none';
     }
 }
-
-// function displayPosts() {
-    
-// }

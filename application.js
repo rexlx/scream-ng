@@ -24,7 +24,9 @@ export class Applcation {
     this.api = api;
     this.tk = {};
     this.key = apiKey;
-    this.messages = [];
+    this.messages = {
+      "sent": 0
+    };
     this.errors = [];
     this.room = {};
     this.roomid = 'welcome';
