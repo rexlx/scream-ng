@@ -82,7 +82,7 @@ addMessage.addEventListener('click', async (e) => {
             out.message = x.data.data;
             out.iv = x.data.iv;
         }
-        console.log("out", out);
+        // console.log("out", out);
         // let y = app.decrypt(x.data.data, x);
         // console.log("encrypted", y);
         sendMessage(`${app.api}/message`, out);
@@ -105,6 +105,10 @@ joinRoom.addEventListener('click', async (e) => {
     roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? app.room.name : 'upside down'}</h4>`
     if (app.room.messages && app.room.messages.length > 0) {
         for (let m of app.messages) {
+            if (m.hotsauce) {
+                let y = await app.decrypt(m.message, m);
+                m.message = y;
+            }
             addMessageToBox(m);
         }
     }
@@ -147,6 +151,10 @@ viewHistory.addEventListener('click', async (e) => {
             roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? app.room.name : 'upside down'}</h4>`
             if (app.room.messages && app.room.messages.length > 0) {
                 for (let m of app.messages) {
+                    if (m.hotsauce) {
+                        let y = await app.decrypt(m.message, m);
+                        m.message = y;
+                    }
                     addMessageToBox(m);
                 }
             }
@@ -211,6 +219,7 @@ userRooms.addEventListener('click', async (e) => {
 
 profileMenu.addEventListener('click', (e) => {
     e.preventDefault();
+    // const thisUser
     const homeFromProfile = document.getElementById('homeFromProfile');
     const saveProfile = document.getElementById('saveProfile');
     const email = document.getElementById('editEmail');
@@ -218,13 +227,16 @@ profileMenu.addEventListener('click', (e) => {
     const lastName = document.getElementById('lastName');
     const about = document.getElementById('about');
     const viewPosts = document.getElementById('viewPosts');
+    const editProfileButton = document.getElementById('editProfile');
     const editProfileColumn = document.getElementById('editProfileColumn');
     const postColumn = document.getElementById('postsColumn');
     const postsItem = document.getElementById('postsItem');
     const addPost = document.getElementById('addPost');
+    const thisUser = app.viewingSelf ? app.user : (app.profileUser || app.user);
+    // console.log("thisUser", thisUser, app.viewingSelf);
     loginScreen.style.display = 'none';
-    editProfileColumn.style.display = 'block';
-    postColumn.style.display = 'none';
+    editProfileColumn.style.display = 'none';
+    postColumn.style.display = 'block';
     profileScreen.style.display = 'block';
     mainContent.style.display = 'none';
     theFooter.style.display = 'none';
@@ -232,22 +244,70 @@ profileMenu.addEventListener('click', (e) => {
     firstName.value = app.user.first_name;
     lastName.value = app.user.last_name;
     about.value = app.user.about;
-    cancelProfile.addEventListener('click', (e) => {
-        e.preventDefault();
-        postColumn.style.display = 'none';
-        editProfileColumn.style.display = 'none';
-        checkUser();
-    });
-    saveProfile.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const out = {
-            email: email.value,
-            first_name: firstName.value,
-            last_name: lastName.value,
-            about: about.value
+    if (thisUser.posts) {
+        for (let p of thisUser.posts) {
+            const article = document.createElement('article');
+            article.classList.add('message', 'is-dark');
+            const div = document.createElement('div');
+            div.classList.add('has-text-link-light', 'message-body');
+            div.innerHTML = p.content;
+            div.addEventListener('click', async (e) => {
+                e.preventDefault();
+                box.innerHTML = 'no messages yet';
+                await app.setRoom(p.id);
+                checkUser();
+                roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? app.room.name : 'upside down'}</h4>`
+                if (app.room.messages && app.room.messages.length > 0) {
+                    for (let m of app.messages) {
+                        addMessageToBox(m);
+                    }
+                }
+                app.establishWSConnection(app.room.id ? app.room.id : 'welcome', app.tk.value);
+                app.socket.onmessage = async (event) => {
+                    const data = JSON.parse(event.data);
+                    if (data.hotsauce) {
+                        let y = await app.decrypt(data.message, data);
+                        data.message = y;
+                    }
+                    // console.log("WSM", data);
+                    addMessageToBox(data);
+                };
+                viewPosts.innerHTML = `posts`;
+                // historyItem.innerHTML = '';
+            });
+            article.appendChild(div);
+            viewPosts.appendChild(article);
         }
-        await app.updateProfile(out);
-        checkUser();
+    }
+    editProfileButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!app.viewingSelf) {
+            return;
+        }
+        editProfileColumn.style.display = 'block';
+        postColumn.style.display = 'none';
+        profileScreen.style.display = 'block';
+        mainContent.style.display = 'none';
+        theFooter.style.display = 'none';
+
+        // you added these lines from just outside the function
+        cancelProfile.addEventListener('click', (e) => {
+            e.preventDefault();
+            postColumn.style.display = 'none';
+            editProfileColumn.style.display = 'none';
+            checkUser();
+        });
+        saveProfile.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const out = {
+                email: email.value,
+                first_name: firstName.value,
+                last_name: lastName.value,
+                about: about.value
+            }
+            await app.updateProfile(out);
+            checkUser();
+        });
     });
 
     // posts menu item is clicked
@@ -259,7 +319,7 @@ profileMenu.addEventListener('click', (e) => {
         mainContent.style.display = 'none';
         theFooter.style.display = 'none';
         viewPosts.innerHTML = '';
-        if (app.user.posts) {
+        if (thisUser.posts) {
             for (let p of app.user.posts) {
                 const article = document.createElement('article');
                 article.classList.add('message', 'is-dark');
@@ -269,7 +329,7 @@ profileMenu.addEventListener('click', (e) => {
                 div.addEventListener('click', async (e) => {
                     e.preventDefault();
                     box.innerHTML = 'no messages yet';
-                    await app.setRoom(p);
+                    await app.setRoom(p.id);
                     roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? app.room.name : 'upside down'}</h4>`
                     if (app.room.messages && app.room.messages.length > 0) {
                         for (let m of app.messages) {
@@ -346,15 +406,12 @@ loadKeydb.addEventListener('click', async (e) => {
                     app.errors.push("client error...", e.message);
                 };
             }).catch((error) => {
-                console.log("error", error);
                 app.errors.push("client error...", error.message);
             });
         }).catch((error) => {
-            console.log("error", error);
             app.errors.push("client error...", error.message);
         });
     } catch (error) {
-        console.log("error", error);
         app.errors.push("client error...", error.message);
     }
 });
@@ -386,15 +443,38 @@ function addMessageToBox(data) {
     if (box.innerHTML === 'no messages yet') {
         box.innerHTML = '';
     }
-    const out = `<div class="content has-text-info mb-3">
-    <span class="has-text-dark"> ${data.time}</span>
-    <span class="has-text-link"> ${data.email}</span>
-    <p class="has-text-primary content wrap">${data.message}</p>
-    </div>`;
-    box.innerHTML += out;
+    // const out = `<div class="content has-text-info mb-3">
+    // <span class="has-text-dark"> ${data.time}</span>
+    // <span class="has-text-link"> ${data.email}</span>
+    // <p class="has-text-primary content wrap">${data.message}</p>
+    // </div>`;
+    const message = document.createElement('div');
+    message.classList.add('content', 'has-text-info', 'mb-3');
+    message.dataset.id = data.user_id;
+    const emailSpan = document.createElement('span');
+    emailSpan.classList.add('has-text-link');
+    emailSpan.innerHTML = data.email;
+    const timeSpan = document.createElement('span');
+    timeSpan.classList.add('has-text-dark');
+    timeSpan.innerHTML = data.time;
+    timeSpan.innerHTML += ' ';
+    message.appendChild(timeSpan);
+    message.appendChild(emailSpan);
+    const p = document.createElement('p');
+    p.classList.add('has-text-primary', 'content', 'wrap');
+    p.innerHTML = data.message;
+    message.appendChild(p);
+    emailSpan.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await app.getUser(data.user_id);
+        app.viewingSelf = false;
+        profileMenu.click();
+    });
+    box.appendChild(message);
 }
 
 function checkUser() {
+    app.viewingSelf = true;
     if (app.user.id) {
         loginScreen.style.display = 'none';
         profileScreen.style.display = 'none';
@@ -407,3 +487,7 @@ function checkUser() {
         mainContent.style.display = 'none';
     }
 }
+
+// function displayPosts() {
+    
+// }

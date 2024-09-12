@@ -92,6 +92,7 @@ func NewServer(fileHandle string, dbName string) *Server {
 	s.Gateway.Handle("/test", s.ValidateToken(http.HandlerFunc(s.TestHandler)))
 	s.Gateway.Handle("/message", s.ValidateToken(http.HandlerFunc(s.MessageHandler)))
 	s.Gateway.Handle("/adduser", s.ValidateToken(http.HandlerFunc(s.AddUserHandler)))
+	s.Gateway.Handle("/getuser", s.ValidateToken(http.HandlerFunc(s.GetProfileHandler)))
 	s.Gateway.Handle("/profile", s.ValidateToken(http.HandlerFunc(s.UpdateUserProfile)))
 	s.Gateway.Handle("/history", s.ValidateToken(http.HandlerFunc(s.HistoryByIDHandler)))
 	s.Gateway.Handle("/hotsauce", s.ValidateToken(http.HandlerFunc(s.TempKeyHandler)))

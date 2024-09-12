@@ -20,6 +20,7 @@ export class Applcation {
     ];
     this.socket = {};
     this.connected = false;
+    this.viewingSelf = true;
     this.api = api;
     this.tk = {};
     this.key = apiKey;
@@ -28,6 +29,7 @@ export class Applcation {
     this.room = {};
     this.roomid = 'welcome';
     this.user = {};
+    this.profileUser = {};
     this.init();
   }
   getRandomEncodingKey() {
@@ -210,7 +212,30 @@ export class Applcation {
       this.errors.push("error adding room...", error.message);
     }
   }
+  async getUser(id) {
+    try {
+      const res = await fetch(`${this.api}/getuser`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.key}`
+        },
+        body: JSON.stringify({ user_id: id })
+      });
+      const status = res.status;
+      const data = await res.json();
+      if (status === 200) {
+        this.profileUser = data;
+        console.log("getUser", data);
+      } else {
+        this.errors.push('user not found...');
+      }
+    } catch (error) {
+      this.errors.push("error getting user...", error.message);
+    }
+  }
   async setRoom(room) {
+    console.log("setRoom called", room);
     try {
       const out = {
         email: this.user.email,

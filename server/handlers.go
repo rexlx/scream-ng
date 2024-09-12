@@ -376,6 +376,28 @@ type ProfileUpdateRequest struct {
 	About     string `json:"about"`
 }
 
+func (s *Server) GetProfileHandler(w http.ResponseWriter, r *http.Request) {
+	var hr historyRequest
+	err := json.NewDecoder(r.Body).Decode(&hr)
+	if err != nil {
+		http.Error(w, "could not parse message", http.StatusBadRequest)
+		return
+	}
+	// fmt.Println("get profile handler", hr)
+	u, err := s.GetUserByID(hr.UserID)
+	if err != nil {
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
+	out, err := json.Marshal(u)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
+}
+
 func (s *Server) UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 	var pur ProfileUpdateRequest
 	err := json.NewDecoder(r.Body).Decode(&pur)

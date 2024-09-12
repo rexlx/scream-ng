@@ -35,9 +35,12 @@ func (s *Server) GetUserByID(id string) (User, error) {
 		b := tx.Bucket([]byte(userBucket))
 		c := b.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			// fmt.Println("GetUserByID: checking", string(k), string(v))
-			if string(v) == id {
-				return user.UnmarshalBinary(v)
+			err := user.UnmarshalBinary(v)
+			if err != nil {
+				return err
+			}
+			if user.ID == id {
+				return nil
 			}
 		}
 		fmt.Println("GetUserByID: user not found")
