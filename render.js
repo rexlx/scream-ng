@@ -236,6 +236,7 @@ profileMenu.addEventListener('click', (e) => {
     const postColumn = document.getElementById('postsColumn');
     const postsItem = document.getElementById('postsItem');
     const addPost = document.getElementById('addPost');
+    const userDetails = document.getElementById('userDetails');
     const thisUser = app.viewingSelf ? app.user : (app.profileUser || app.user);
     // console.log("thisUser", thisUser, app.viewingSelf);
     loginScreen.style.display = 'none';
@@ -244,10 +245,12 @@ profileMenu.addEventListener('click', (e) => {
     profileScreen.style.display = 'block';
     mainContent.style.display = 'none';
     theFooter.style.display = 'none';
-    email.value = app.user.email;
-    firstName.value = app.user.first_name;
-    lastName.value = app.user.last_name;
-    about.value = app.user.about;
+    email.value = thisUser.email;
+    firstName.value = thisUser.first_name;
+    lastName.value = thisUser.last_name;
+    about.value = thisUser.about;
+    let details = `<h4 class="title is-4 has-text-primary">${thisUser.email}</h4><p>${thisUser.about}</p>`;
+    userDetails.innerHTML = details;
     if (thisUser.posts) {
         for (let p of thisUser.posts) {
             const article = document.createElement('article');
