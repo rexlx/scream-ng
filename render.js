@@ -104,7 +104,7 @@ joinRoom.addEventListener('click', async (e) => {
     box.innerHTML = 'no messages yet';
     roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? app.room.name : 'upside down'}</h4>`
     if (app.room.messages && app.room.messages.length > 0) {
-        for (let m of app.messages) {
+        for (let m of app.room.messages) {
             if (m.hotsauce) {
                 let y = await app.decrypt(m.message, m);
                 m.message = y;
@@ -150,7 +150,7 @@ viewHistory.addEventListener('click', async (e) => {
             await app.setRoom(h);
             roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? app.room.name : 'upside down'}</h4>`
             if (app.room.messages && app.room.messages.length > 0) {
-                for (let m of app.messages) {
+                for (let m of app.room.messages) {
                     if (m.hotsauce) {
                         let y = await app.decrypt(m.message, m);
                         m.message = y;
@@ -195,7 +195,11 @@ userRooms.addEventListener('click', async (e) => {
             await app.setRoom(h);
             roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? app.room.name : 'upside down'}</h4>`
             if (app.room.messages && app.room.messages.length > 0) {
-                for (let m of app.messages) {
+                for (let m of app.room.messages) {
+                    if (m.hotsauce) {
+                        let y = await app.decrypt(m.message, m);
+                        m.message = y;
+                    }
                     addMessageToBox(m);
                 }
             }
@@ -258,7 +262,7 @@ profileMenu.addEventListener('click', (e) => {
                 checkUser();
                 roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? app.room.name : 'upside down'}</h4>`
                 if (app.room.messages && app.room.messages.length > 0) {
-                    for (let m of app.messages) {
+                    for (let m of app.room.messages) {
                         addMessageToBox(m);
                     }
                 }
@@ -332,7 +336,7 @@ profileMenu.addEventListener('click', (e) => {
                     await app.setRoom(p.id);
                     roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? app.room.name : 'upside down'}</h4>`
                     if (app.room.messages && app.room.messages.length > 0) {
-                        for (let m of app.messages) {
+                        for (let m of app.room.messages) {
                             addMessageToBox(m);
                         }
                     }
