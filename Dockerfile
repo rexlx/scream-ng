@@ -20,8 +20,10 @@ FROM alpine:3.10
 RUN apk add --no-cache ca-certificates
 
 COPY --from=builder /app/server /server
-# COPY index.html ./index.html
-# COPY assets/ ./assets/
+COPY ./server/static /static
+
+VOLUME /path
+
 EXPOSE 8080
 # Run the web service on container startup.
-CMD ["/server"]
+CMD ["/server", "-db", "/path/chat.db"]
