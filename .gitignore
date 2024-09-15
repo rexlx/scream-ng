@@ -2,3 +2,4 @@ node_modules/
 server/chat.db
 ritterserver
 *.log
+*.pem

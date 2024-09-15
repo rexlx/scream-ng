@@ -4,7 +4,7 @@
 import { Applcation } from './application.js';
 const box = document.getElementById('mainBox');
 const errorDiv = document.getElementById('errors');
-const app = new Applcation("http://localhost:8080", "thisisadoggertoken");
+const app = new Applcation("http://localhost:8080", "");
 const userMessage = document.getElementById('userMessage');
 const addMessage = document.getElementById('addMessage');
 const login = document.getElementById('login');

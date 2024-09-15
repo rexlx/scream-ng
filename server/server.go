@@ -19,6 +19,7 @@ var (
 type Server struct {
 	*WSHandler
 	ValidKeys map[string]*Key
+	AdminKey  Key
 	Stats     *Stats
 	Rooms     map[string]*Room
 	Memory    *sync.RWMutex
@@ -42,7 +43,7 @@ type Key struct {
 	RequestedBy string    `json:"requested_by"`
 }
 
-func NewServer(fileHandle string, dbName string) *Server {
+func NewServer(fileHandle string, dbName string, kn string) *Server {
 	rooms := make(map[string]*Room)
 	keys := make(map[string]*Key)
 	stats := &Stats{
@@ -65,8 +66,15 @@ func NewServer(fileHandle string, dbName string) *Server {
 	if err != nil {
 		log.Fatal(err)
 	}
+	k := Key{
+		Value:       kn,
+		Expires:     time.Now().Add(time.Hour * 8760),
+		Issued:      time.Now(),
+		RequestedBy: "system",
+	}
 	s := &Server{
 		ValidKeys: keys,
+		AdminKey:  k,
 		DB:        db,
 		Rooms:     rooms,
 		WSHandler: wsh,
@@ -118,7 +126,8 @@ func (s *Server) ValidateToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("validating token")
 		token := r.Header.Get("Authorization")
-		if token != "Bearer thisisadoggertoken" {
+		test := fmt.Sprintf("Bearer %s", s.AdminKey.Value)
+		if token != test {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
