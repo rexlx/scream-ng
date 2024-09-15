@@ -43,9 +43,10 @@ type Key struct {
 	RequestedBy string    `json:"requested_by"`
 }
 
-func NewServer(fileHandle string, dbName string, kn string) *Server {
+func NewServer(fileHandle, dbName, key string) *Server {
 	rooms := make(map[string]*Room)
 	keys := make(map[string]*Key)
+
 	stats := &Stats{
 		App:         make(map[string]float64),
 		Coordinates: make(map[string][]float64),
@@ -67,7 +68,7 @@ func NewServer(fileHandle string, dbName string, kn string) *Server {
 		log.Fatal(err)
 	}
 	k := Key{
-		Value:       kn,
+		Value:       key,
 		Expires:     time.Now().Add(time.Hour * 8760),
 		Issued:      time.Now(),
 		RequestedBy: "system",
@@ -83,6 +84,14 @@ func NewServer(fileHandle string, dbName string, kn string) *Server {
 		Logger:    log.New(fh, "", log.LstdFlags),
 		Gateway:   http.NewServeMux(),
 		StartTime: time.Now(),
+	}
+	if key != "" {
+		s.AdminKey = Key{
+			Value:       key,
+			Expires:     time.Now().Add(time.Hour * 8760),
+			Issued:      time.Now(),
+			RequestedBy: "system",
+		}
 	}
 	devRoom := NewRoom("welcome", 100)
 	devRoom.ID = "welcome"
@@ -126,6 +135,7 @@ func (s *Server) ValidateToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("validating token")
 		token := r.Header.Get("Authorization")
+
 		test := fmt.Sprintf("Bearer %s", s.AdminKey.Value)
 		if token != test {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)

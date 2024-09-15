@@ -4,7 +4,7 @@
 import { Applcation } from './application.js';
 const box = document.getElementById('mainBox');
 const errorDiv = document.getElementById('errors');
-const app = new Applcation("", "");
+const app = new Applcation("https://localhost:8080", "admin");
 const userMessage = document.getElementById('userMessage');
 const addMessage = document.getElementById('addMessage');
 const login = document.getElementById('login');
