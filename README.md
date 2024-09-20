@@ -32,7 +32,7 @@ remove keys all together to disable encryption
     "name": "tegular-peripatopsidae",
     "key": "eOSPDQfRMp+RwOKE4v7TQc5yGgeg2ABQ23pjWg8kWAg="
   },
-(last line)]
+](last line)
 ```
 
 where the key is a 32 byte (or 16 technically) value. below is an example of how i create keys [elsewhere](https://github.com/rexlx/dieScribe).
