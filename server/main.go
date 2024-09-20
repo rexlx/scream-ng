@@ -51,5 +51,5 @@ func main() {
 	}
 
 	s.Logger.Println("Server is running")
-	log.Fatal(server.ListenAndServe())
+	log.Fatal(server.ListenAndServeTLS("", ""))
 }
