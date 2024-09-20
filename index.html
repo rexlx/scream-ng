@@ -5,11 +5,14 @@
     <meta charset="UTF-8">
     <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self' https://localhost:8080/; connect-src 'self' https://kenmeri.nullferatu.com:9200/ https://localhost:8080/ ws://localhost:8080/; style-src 'self' https://localhost:8080/" />
-    <meta http-equiv="X-Content-Security-Policy"
-        content="default-src 'self'; connect-src 'self' https://kenmeri.nullferatu.com:9200/ https://localhost:8080/ ws://localhost:8080/; style-src 'self' https://localhost:8080/" />
+    content="default-src 'self' http://localhost:8081/; connect-src 'self' http://localhost:8081/ ws://localhost:8081/; style-src 'self' http://localhost:8081/" />
+<meta http-equiv="X-Content-Security-Policy"
+    content="default-src 'self'; connect-src 'self' http://localhost:8081/ ws://localhost:8081/; style-src 'self' http://localhost:8081/" />
+
+
     <title>infini</title>
-    <link rel="stylesheet" href="https://localhost:8080/static/bulma.min.css" />
+    <link rel="stylesheet" href="http://localhost:8081/static/bulma.min.css" />
+    <!-- <link rel="stylesheet" href="https://chat.nullferatu.us:8081/static/bulma.min.css" /> -->
     <link rel="stylesheet" href="style.css" />
 
 </head>
@@ -81,7 +84,10 @@
                     </div>
                     <div class="field">
                         <div class="control">
-                            <button class="button is-link is-outlined" id="addMessage">send</button>
+                            <div class="buttons">
+                                <button class="button is-link is-outlined" id="addMessage">send</button>
+                                <button class="button is-link is-outlined" id="clearCommand">clear</button>
+                            </div>
                         </div>
                     </div>
                 </form>
