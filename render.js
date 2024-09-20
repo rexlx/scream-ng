@@ -4,7 +4,7 @@
 import { Applcation } from './application.js';
 const box = document.getElementById('mainBox');
 const errorDiv = document.getElementById('errors');
-const app = new Applcation("https://localhost:8080", "admin");
+const app = new Applcation("http://localhost:8081", "admin");
 const userMessage = document.getElementById('userMessage');
 const addMessage = document.getElementById('addMessage');
 const login = document.getElementById('login');
@@ -23,6 +23,7 @@ const userRooms = document.getElementById('userRooms');
 const addRoom = document.getElementById('addRoom');
 const cancelProfile = document.getElementById('cancelProfile');
 const loadKeydb = document.getElementById('loadKeydb');
+const clearCommand = document.getElementById('clearCommand');
 
 login.addEventListener('click', async (e) => {
     e.preventDefault();
@@ -115,6 +116,10 @@ joinRoom.addEventListener('click', async (e) => {
     app.establishWSConnection(app.room.id ? app.room.id : 'welcome', app.tk.value);
     app.socket.onmessage = async (event) => {
         const data = JSON.parse(event.data);
+        if (data.command === 'clear') {
+            box.innerHTML = `${data.email} cleared the chat`;
+            return;
+        }
         if (data.hotsauce) {
             let y = await app.decrypt(data.message, data);
             data.message = y;
@@ -129,6 +134,10 @@ roomName.innerHTML = `<h4 class="title is-4 has-text-primary">${app.room.name ? 
     
 app.socket.onmessage = async (event) => {
     const data = JSON.parse(event.data);
+    if (data.command === 'clear') {
+        box.innerHTML = `${data.email} cleared the chat`;
+        return;
+    }
     if (data.hotsauce) {
         let y = await app.decrypt(data.message, data);
         data.message = y;
@@ -161,6 +170,10 @@ viewHistory.addEventListener('click', async (e) => {
             app.establishWSConnection(app.room.id ? app.room.id : 'welcome', app.tk.value);
             app.socket.onmessage = async (event) => {
                 const data = JSON.parse(event.data);
+                if (data.command === 'clear') {
+                    box.innerHTML = `${data.email} cleared the chat`;
+                    return;
+                }
                 if (data.hotsauce) {
                     let y = await app.decrypt(data.message, data);
                     data.message = y;
@@ -206,6 +219,10 @@ userRooms.addEventListener('click', async (e) => {
             app.establishWSConnection(app.room.id ? app.room.id : 'welcome', app.tk.value);
             app.socket.onmessage = async (event) => {
                 const data = JSON.parse(event.data);
+                if (data.command === 'clear') {
+                    box.innerHTML = `${data.email} cleared the chat`;
+                    return;
+                }
                 if (data.hotsauce) {
                     let y = await app.decrypt(data.message, data);
                     data.message = y;
@@ -273,6 +290,10 @@ profileMenu.addEventListener('click', (e) => {
                 app.establishWSConnection(app.room.id ? app.room.id : 'welcome', app.tk.value);
                 app.socket.onmessage = async (event) => {
                     const data = JSON.parse(event.data);
+                    if (data.command === 'clear') {
+                        box.innerHTML = `${data.email} cleared the chat`;
+                        return;
+                    }
                     if (data.hotsauce) {
                         let y = await app.decrypt(data.message, data);
                         data.message = y;
@@ -347,6 +368,10 @@ profileMenu.addEventListener('click', (e) => {
                     app.establishWSConnection(app.room.id ? app.room.id : 'welcome', app.tk.value);
                     app.socket.onmessage = async (event) => {
                         const data = JSON.parse(event.data);
+                        if (data.command === 'clear') {
+                            box.innerHTML = `${data.email} cleared the chat`;
+                            return;
+                        }
                         if (data.hotsauce) {
                             let y = await app.decrypt(data.message, data);
                             data.message = y;
@@ -379,6 +404,11 @@ profileMenu.addEventListener('click', (e) => {
         e.preventDefault();
         checkUser();
     });
+});
+
+clearCommand.addEventListener('click', (e) => {
+    e.preventDefault();
+    app.sendClearCommand();
 });
 
 loadKeydb.addEventListener('click', async (e) => {

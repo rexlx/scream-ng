@@ -25,6 +25,78 @@ func (s *Server) TestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
+type Action struct {
+	RoomID  string `json:"room_id"`
+	Email   string `json:"email"`
+	Command string `json:"command"`
+	Time    int64  `json:"time"`
+	ID      string `json:"id"`
+}
+
+func (a *Action) SetID(v string) {
+	if v != "" {
+		a.ID = v
+		return
+	}
+	a.ID = uuid.New().String()
+}
+
+func (s *Server) ActionHandler(w http.ResponseWriter, r *http.Request) {
+	var a Action
+	err := json.NewDecoder(r.Body).Decode(&a)
+	if err != nil {
+		http.Error(w, "could not parse message", http.StatusBadRequest)
+		return
+	}
+	u, err := s.GetUserByEmail(a.Email)
+	if err != nil {
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
+
+	if a.Command == "" {
+		http.Error(w, "missing command", http.StatusBadRequest)
+		return
+	}
+	a.SetID(u.Handle)
+	cmd := CommandFactory(a)
+	if cmd == nil {
+		http.Error(w, "invalid command", http.StatusBadRequest)
+		return
+	}
+	room, ok := s.Rooms[a.RoomID]
+	if !ok {
+		http.Error(w, "room not found", http.StatusNotFound)
+		return
+	}
+	// room.Memory.Lock()
+	// defer room.Memory.Unlock()
+	_, err = cmd.Execute(a.ID, room)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	s.Messagechan <- WSMessage{
+		InitialVector: "",
+		Hotsauce:      "",
+		Time:          time.Now().Format("01/02 15:04"),
+		Command:       a.Command[1:],
+		Email:         a.Email,
+		UserID:        u.Handle,
+		RoomID:        a.RoomID,
+	}
+
+	res := make(map[string]string)
+	res["ok"] = "true"
+	out, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
+}
+
 func (s *Server) MessageHandler(w http.ResponseWriter, r *http.Request) {
 	var m WSMessage
 	// var m Message
@@ -405,7 +477,7 @@ func (s *Server) UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "could not parse message", http.StatusBadRequest)
 		return
 	}
-	fmt.Println("update user profile", pur)
+	// fmt.Println("update user profile", pur)
 	u, err := s.GetUserByEmail(pur.Email)
 	if err != nil {
 		http.Error(w, "user not found", http.StatusNotFound)

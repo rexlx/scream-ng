@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html"
 	"log"
 	"net/http"
 	"os"
@@ -41,6 +42,60 @@ type Key struct {
 	Expires     time.Time `json:"expires"`
 	Issued      time.Time `json:"issued"`
 	RequestedBy string    `json:"requested_by"`
+}
+
+type Command interface {
+	Execute(string, *Room) (string, error)
+}
+
+type ClearCommand struct {
+	ID    string `json:"id"`
+	Value string `json:"value"`
+	Time  int64  `json:"time"`
+}
+
+func (c *ClearCommand) Execute(id string, r *Room) (string, error) {
+	fmt.Println("clearing messages", r.ID)
+	r.ClearMessages()
+	return "", nil
+}
+
+type LinkCommand struct {
+	Value string `json:"value"`
+	ID    string `json:"id"`
+	Time  int64  `json:"time"`
+}
+
+func (c *LinkCommand) Execute(id string, r *Room) (string, error) {
+	out := `<a href="%v" class="has-text-link">%v</a>`
+	parts := strings.Split(c.Value, "__")
+	if len(parts) < 3 {
+		return "", fmt.Errorf("invalid link command")
+	}
+	return fmt.Sprintf(out, parts[1], parts[2]), nil
+}
+
+func ParseCommand(s string) Command {
+	sanitized := SanitizeHTML(s)
+	switch {
+	case strings.HasPrefix(s, "/clear"):
+		return &ClearCommand{Value: sanitized}
+	case strings.HasPrefix(s, "/link"):
+		return &LinkCommand{Value: sanitized}
+	default:
+		return nil
+	}
+}
+
+func CommandFactory(a Action) Command {
+	switch a.Command {
+	case "/clear":
+		return &ClearCommand{Value: "clear", Time: a.Time, ID: a.ID}
+	case "/link":
+		return &LinkCommand{Value: a.Command, Time: a.Time, ID: a.ID}
+	default:
+		return nil
+	}
 }
 
 func NewServer(fileHandle, dbName, key string) *Server {
@@ -113,6 +168,7 @@ func NewServer(fileHandle, dbName, key string) *Server {
 	s.Gateway.Handle("/profile", s.ValidateToken(http.HandlerFunc(s.UpdateUserProfile)))
 	s.Gateway.Handle("/history", s.ValidateToken(http.HandlerFunc(s.HistoryByIDHandler)))
 	s.Gateway.Handle("/hotsauce", s.ValidateToken(http.HandlerFunc(s.TempKeyHandler)))
+	s.Gateway.Handle("/clear", s.ValidateToken(http.HandlerFunc(s.ActionHandler)))
 	s.Gateway.Handle("/room/", http.StripPrefix("/room", http.HandlerFunc(s.RoomHandler)))
 	s.Gateway.Handle("/ws/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		parts := strings.Split(r.URL.Path, "/")
@@ -133,7 +189,7 @@ func NewServer(fileHandle, dbName, key string) *Server {
 
 func (s *Server) ValidateToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("validating token")
+		// fmt.Println("validating token")
 		token := r.Header.Get("Authorization")
 
 		test := fmt.Sprintf("Bearer %s", s.AdminKey.Value)
@@ -168,4 +224,9 @@ func (s *Server) isValidKey(key string) bool {
 	}
 	fmt.Println("tkey is valid!")
 	return true
+}
+
+func SanitizeHTML(s string) string {
+	s = html.EscapeString(s)
+	return s
 }

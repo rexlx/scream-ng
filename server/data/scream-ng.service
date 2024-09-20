@@ -1,0 +1,15 @@
+[Unit]
+Description=Scream service for user rxlx
+After=network.target
+
+[Service]
+Type=simple
+User=rxlx
+Group=rxlx
+WorkingDirectory=/home/rxlx/dev/scream-ng/server
+ExecStart=/home/rxlx/dev/scream-ng/server/ritterserver
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

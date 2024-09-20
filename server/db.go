@@ -16,7 +16,7 @@ func (s *Server) GetUserByEmail(email string) (User, error) {
 		b := tx.Bucket([]byte(userBucket))
 		v := b.Get([]byte(email))
 		if v == nil {
-			fmt.Println("GetUserByEmail: user not found")
+			fmt.Println("error GetUserByEmail: user not found")
 			s.Stats.App["user_not_found"]++
 			return nil
 		}
@@ -43,7 +43,7 @@ func (s *Server) GetUserByID(id string) (User, error) {
 				return nil
 			}
 		}
-		fmt.Println("GetUserByID: user not found")
+		fmt.Println("error GetUserByID: user not found")
 		s.Stats.App["user_not_found"]++
 		return nil
 	})

@@ -18,6 +18,7 @@ var upgrader = websocket.Upgrader{
 }
 
 type WSMessage struct {
+	Command       string `json:"command"`
 	InitialVector string `json:"iv"`
 	Hotsauce      string `json:"hotsauce"`
 	RoomID        string `json:"room_id"`
@@ -59,6 +60,7 @@ dasWriter:
 				continue
 			}
 			room.AddMessage(message)
+			// fmt.Println("WSHandler.Write: added message to room", message.RoomID)
 			out, err := json.Marshal(message)
 			if err != nil {
 				fmt.Println("WSHandler.Write: error marshalling message", err)

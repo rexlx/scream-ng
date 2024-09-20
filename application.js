@@ -110,6 +110,35 @@ export class Applcation {
       this.errors.push("error updating profile...", error.message);
     }
   }
+  async sendClearCommand() {
+    const out = {
+      "email": this.user.email,
+      "command": "/clear",
+      "room_id": this.roomid
+    }
+
+    try {
+      const res = await fetch(`${this.api}/clear`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.key}`
+        },
+        body: JSON.stringify(out)
+      });
+      const status = res.status;
+      const data = await res.json();
+      console.log("clear command", status, data); 
+      if (status === 200) {
+        console.log("clear command sent", data);
+      } else {
+        this.errors.push('clear command not sent...');
+      }
+    } catch (error) {
+      this.errors.push("error sending clear command...", error.message);
+    }
+
+  }
   async getTempKey() {
     try {
       const res = await fetch(`${this.api}/hotsauce`, {
